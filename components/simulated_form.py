@@ -15,7 +15,8 @@ def display_simulated_form():
             "Average Trades per Day",
             min_value=0.1,
             value=10.0,
-            step=0.1
+            step=0.1,
+            key="simulated_avg_trades"
         )
     
     with col2:
@@ -23,7 +24,8 @@ def display_simulated_form():
             "Stop Loss (Ticks)",
             min_value=1,
             value=40,
-            step=1
+            step=1,
+            key="simulated_stop_loss"
         )
     
     with col3:
@@ -31,7 +33,8 @@ def display_simulated_form():
             "Take Profit (Ticks)",
             min_value=1,
             value=40,
-            step=1
+            step=1,
+            key="simulated_take_profit"
         )
     
     with col4:
@@ -40,31 +43,31 @@ def display_simulated_form():
             min_value=0.0,
             max_value=100.0,
             value=50.0,
-            step=0.1
+            step=0.1,
+            key="simulated_win_percentage"
         )
 
     # Core parameters
-    params = display_core_parameters()
+    params = display_core_parameters(prefix="simulated_")
 
-    if st.button("Run Simulation", type="primary"):
-        # Prepare configuration
+    if st.button("Run Simulation", type="primary", key="simulated_run_button"):
+        # Ensure all numeric values are properly typed
         config = {
-            "iterations": params["iterations"],
-            "max_simulation_days": params["max_simulation_days"],
-            "account_type": params["account_type"],
-            "multiplier": params["multiplier"],
-            "round_trip_cost": params["round_trip_cost"],
+            "iterations": int(params["iterations"]),
+            "max_simulation_days": int(params["max_simulation_days"]),
+            "account_type": str(params["account_type"]),
+            "multiplier": float(params["multiplier"]),
+            "round_trip_cost": float(params["round_trip_cost"]),
             "histogram": True,
-            "condition_end_state": params["condition_end_state"],
+            "condition_end_state": str(params["condition_end_state"]),
             "max_payouts": 12,
-            "avg_trades_per_day": avg_trades,
-            "stop_loss": stop_loss,
-            "take_profit": take_profit,
-            "win_percentage": win_percentage
+            "avg_trades_per_day": float(avg_trades),
+            "stop_loss": float(stop_loss),
+            "take_profit": float(take_profit),
+            "win_percentage": float(win_percentage)
         }
 
         with st.spinner("Running simulation..."):
             results = run_simulation(config)
             if results:
                 display_results(results)
-
