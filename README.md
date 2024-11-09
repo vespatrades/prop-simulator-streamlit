@@ -1,4 +1,3 @@
-```markdown
 # Prop Trading Simulator Deployment Guide
 
 ## Overview
