@@ -1,14 +1,23 @@
-# components/historical_form.py
 import streamlit as st
-import pandas as pd
 import logging
 from components.core_parameters import display_core_parameters
 from components.results import display_results
 from utils.api import run_simulation
+from utils.security import (
+    validate_csv_file,
+    check_rate_limit,
+    display_challenge,
+    init_session_state,
+    clear_session_state,
+)
 
 logger = logging.getLogger(__name__)
 
+
 def display_historical_form():
+    # Initialize session state
+    init_session_state()
+
     st.markdown("### Simulate with Historical Data")
     st.markdown("Upload your historical trading data in CSV format")
 
@@ -23,39 +32,45 @@ def display_historical_form():
     # Core parameters
     params = display_core_parameters(prefix="historical_")
 
-    if st.button("Run Simulation", type="primary", key="historical_run_button"):
+    run_button = st.button("Run Simulation", type="primary", key="historical_run_button")
+
+    # Store parameters in session state when button is clicked
+    if run_button:
+        st.session_state.current_params = params
+        st.session_state.current_csv = csv_file
+
+    # Check if we should run the simulation
+    if (run_button or st.session_state.run_simulation) and st.session_state.current_params is not None:
+        # Check rate limit
+        if not check_rate_limit():
+            st.error("Rate limit exceeded. Please wait before trying again.")
+            return
+
+        # Show challenge dialog if not verified
+        if not st.session_state.get('challenge_verified'):
+            display_challenge()
+            return
+
+        # Clear the run flag
+        st.session_state.run_simulation = False
+
+        csv_file = st.session_state.current_csv
         if csv_file is None:
             st.error("Please upload a CSV file")
             return
 
         try:
-            # Read CSV file
-            df = pd.read_csv(csv_file)
-
-            # Display the first few rows for verification
-            st.write("Preview of uploaded data:")
-            st.write(df.head())
-
-            # Strip whitespace from column names
-            df.columns = df.columns.str.strip()
-
-            # Check columns
-            required_columns = ["DateTime", "Return", "Max Opposite Excursion"]
-            missing_columns = [col for col in required_columns if col not in df.columns]
-
-            if missing_columns:
-                st.error(f"Missing required columns: {', '.join(missing_columns)}")
-                return
-
-            # Basic data validation
-            if df.empty:
-                st.error("The CSV file is empty")
+            # Validate CSV file
+            is_valid, error_msg, df = validate_csv_file(csv_file)
+            if not is_valid:
+                st.error(error_msg)
                 return
 
             # Reset file pointer for sending
             csv_file.seek(0)
 
             # Prepare configuration
+            params = st.session_state.current_params
             config = {
                 "iterations": int(params["iterations"]),
                 "max_simulation_days": int(params["max_simulation_days"]),
@@ -72,10 +87,10 @@ def display_historical_form():
                 if results:
                     display_results(results)
 
-        except pd.errors.EmptyDataError:
-            st.error("The uploaded file is empty")
-        except pd.errors.ParserError as e:
-            st.error(f"Error parsing CSV file: {str(e)}")
         except Exception as e:
-            st.error(f"Error processing CSV file: {str(e)}")
+            logger.error(f"Error in simulation: {str(e)}")
+            st.error(f"Error processing simulation: {str(e)}")
 
+        finally:
+            # Clear stored parameters after simulation
+            clear_session_state()

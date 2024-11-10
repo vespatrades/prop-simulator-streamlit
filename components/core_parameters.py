@@ -1,8 +1,6 @@
 import streamlit as st
 from config.accounts import ACCOUNT_TYPES, COMMON_MULTIPLIERS
 
-# components/core_parameters.py
-
 def display_core_parameters(prefix=""):
     """
     Display core parameters with unique keys for each component
@@ -23,7 +21,7 @@ def display_core_parameters(prefix=""):
             options=[opt[0] for opt in account_options],
             format_func=lambda x: next(opt[1] for opt in account_options if opt[0] == x),
             index=2,  # Default to GT
-            key=f"{prefix}account_type"  # Add unique key
+            key=f"{prefix}account_type"
         )
 
     with col2:
@@ -31,9 +29,10 @@ def display_core_parameters(prefix=""):
         round_trip_cost = st.number_input(
             "Round Trip Cost",
             min_value=0.0,
+            max_value=100.0,
             value=0.0,
             step=0.01,
-            key=f"{prefix}round_trip_cost"  # Add unique key
+            key=f"{prefix}round_trip_cost"
         )
 
     with col3:
@@ -46,16 +45,17 @@ def display_core_parameters(prefix=""):
             options=[opt[0] for opt in multiplier_options],
             format_func=lambda x: next(opt[1] for opt in multiplier_options if opt[0] == x),
             index=1,  # Default to NQ
-            key=f"{prefix}multiplier_selection"  # Add unique key
+            key=f"{prefix}multiplier_selection"
         )
 
         if multiplier_selection == "custom":
             multiplier = st.number_input(
                 "Custom Multiplier",
                 min_value=1,
+                max_value=2000,
                 value=20,
                 step=1,
-                key=f"{prefix}custom_multiplier"  # Add unique key
+                key=f"{prefix}custom_multiplier"
             )
         else:
             multiplier = multiplier_selection
@@ -67,9 +67,10 @@ def display_core_parameters(prefix=""):
         iterations = st.number_input(
             "Iterations",
             min_value=1000,
+            max_value=100000,
             value=10000,
             step=1000,
-            key=f"{prefix}iterations"  # Add unique key
+            key=f"{prefix}iterations"
         )
 
     with col5:
@@ -77,9 +78,10 @@ def display_core_parameters(prefix=""):
         max_days = st.number_input(
             "Max Days",
             min_value=1,
+            max_value=730,  # Add reasonable maximum (2 years)
             value=365,
             step=1,
-            key=f"{prefix}max_days"  # Add unique key
+            key=f"{prefix}max_days"
         )
 
     with col6:
@@ -88,7 +90,7 @@ def display_core_parameters(prefix=""):
             "End State Filter",
             options=["All", "Busted", "TimeOut", "MaxPayouts"],
             index=0,
-            key=f"{prefix}end_state"  # Add unique key
+            key=f"{prefix}end_state"
         )
 
     return {
@@ -99,4 +101,3 @@ def display_core_parameters(prefix=""):
         "max_simulation_days": max_days,
         "condition_end_state": end_state
     }
-
